@@ -22,8 +22,6 @@ Component.register('sw-select-rule-create', {
     template,
     inheritAttrs: false,
 
-    compatConfig: Shopware.compatConfig,
-
     inject: [
         'repositoryFactory',
         'feature',
@@ -33,6 +31,7 @@ Component.register('sw-select-rule-create', {
     emits: [
         'save-rule',
         'dismiss-rule',
+        'update:rules',
     ],
 
     props: {
@@ -87,6 +86,12 @@ Component.register('sw-select-rule-create', {
                 return '';
             },
         },
+
+        size: {
+            type: String,
+            required: false,
+            default: 'default',
+        },
     },
 
     data() {
@@ -132,6 +137,10 @@ Component.register('sw-select-rule-create', {
             if (event !== this.ruleId) {
                 this.onSaveRule(event);
             }
+        },
+
+        onUpdateCollection(collection) {
+            this.$emit('update:rules', collection);
         },
 
         openCreateRuleModal() {

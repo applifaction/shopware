@@ -21,8 +21,6 @@ const { fileReader } = Shopware.Utils;
 export default {
     template,
 
-    compatConfig: Shopware.compatConfig,
-
     inject: [
         'repositoryFactory',
         'feature',
@@ -46,7 +44,7 @@ export default {
         'audio/wav',
     ],
 
-    placeholderThumbnailsBasePath: '/administration/static/img/media-preview/',
+    placeholderThumbnailsBasePath: '/administration/administration/static/img/media-preview/',
 
     placeHolderThumbnails: {
         application: {

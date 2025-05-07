@@ -64,7 +64,6 @@ const missingTests = [
     'src/app/component/grid/sw-grid-column/index.js',
     'src/app/component/grid/sw-grid-row/index.js',
     'src/app/component/rule/condition-type/sw-condition-billing-zip-code/index.js',
-    'src/app/component/rule/condition-type/sw-condition-customer-custom-field/index.js',
     'src/app/component/rule/condition-type/sw-condition-generic-line-item/index.js',
     'src/app/component/rule/condition-type/sw-condition-goods-count/index.js',
     'src/app/component/rule/condition-type/sw-condition-goods-price/index.js',
@@ -197,7 +196,6 @@ const missingTests = [
     'src/core/service/api/snippet.api.service.js',
     'src/core/service/api/state-machine.api.service.js',
     'src/core/service/api/store-context.api.service.ts',
-    'src/core/service/api/sync.api.service.js',
     'src/core/service/api/user-config.api.service.js',
     'src/core/service/api/user-input-sanitize.service.js',
     'src/core/service/api/user-recovery.api.service.js',
@@ -308,7 +306,6 @@ const missingTests = [
     'src/module/sw-media/component/sidebar/sw-media-tag/index.js',
     'src/module/sw-media/component/sw-media-breadcrumbs/index.js',
     'src/module/sw-media/component/sw-media-collapse/index.js',
-    'src/module/sw-media/component/sw-media-display-options/index.js',
     'src/module/sw-media/component/sw-media-grid/index.js',
     'src/module/sw-media/default-search-configuration.js',
     'src/module/sw-media/index.js',
@@ -457,11 +454,8 @@ const missingTests = [
     'src/module/sw-users-permissions/index.js',
     'src/app/component/form/select/entity/sw-entity-many-to-many-select/index.js',
     'src/module/sw-sales-channel/component/sw-sales-channel-modal/index.js',
-    // Doubled vite files
-    'src/app/main.vite.ts',
-    'src/index.vite.ts',
-    'src/app/init-post/index.vite.ts',
-    'src/app/init-post/worker.init.vite.ts',
+    // unable to test because of es module <-> cjs conflicts lazy import statements
+    'src/app/init/component.init.ts',
 ];
 
 /**

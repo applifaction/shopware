@@ -19,8 +19,6 @@ const { Component } = Shopware;
 Component.register('sw-context-button', {
     template,
 
-    compatConfig: Shopware.compatConfig,
-
     inject: ['feature'],
 
     emits: ['on-open-change'],
@@ -72,6 +70,12 @@ Component.register('sw-context-button', {
             type: String,
             required: false,
             default: 'solid-ellipsis-h-s',
+        },
+
+        iconSize: {
+            type: String,
+            required: false,
+            default: '16px',
         },
 
         disabled: {

@@ -3,13 +3,13 @@ import template from './sw-order-state-history-card-entry.html.twig';
 
 /**
  * @sw-package checkout
+ *
+ * @deprecated tag:v6.8.0 - will be removed, no usages found
  */
 
 // eslint-disable-next-line sw-deprecation-rules/private-feature-declarations
 export default {
     template,
-
-    compatConfig: Shopware.compatConfig,
 
     inject: ['stateStyleDataProviderService'],
 
@@ -41,19 +41,6 @@ export default {
     computed: {
         dateFilter() {
             return Shopware.Filter.getByName('date');
-        },
-
-        /**
-         * @deprecated tag:v6.7.0 - Can be removed. Event listerns will be in $attrs.
-         */
-        listeners() {
-            let listeners = {};
-
-            if (this.isCompatEnabled('INSTANCE_LISTENERS')) {
-                listeners = this.$listeners;
-            }
-
-            return listeners;
         },
     },
 

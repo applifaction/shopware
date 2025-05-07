@@ -29,7 +29,6 @@ import type UserApiService from 'src/core/service/api/user.api.service';
 import type ApiServiceFactory from 'src/core/factory/api-service.factory';
 import type { ComponentInternalInstance } from 'vue';
 import type { I18n } from 'vue-i18n';
-import type { Slots } from '@vue/runtime-core';
 import type {
     Store,
     mapActions as mapVuexActions,
@@ -40,6 +39,11 @@ import type {
 import type { mapActions, mapState } from 'pinia';
 import type * as mapErrors from 'src/app/service/map-errors.service';
 import type JsonApiParserService from 'src/core/service/jsonapi-parser.service';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// Needed for the Editor types
+import type { Editor as CoreEditor, EditorOptions } from '@tiptap/core';
+import type Link from '@tiptap/extension-link';
+/* eslint-enable @typescript-eslint/no-unused-vars */
 import type { ComponentConfig } from './core/factory/async-component.factory';
 import type StoreApiService from './core/service/api/store.api.service';
 import type ShopwareDiscountCampaignService from './app/service/discount-campaign.service';
@@ -108,6 +112,7 @@ import type { SettingsItems } from './app/store/settings-item.store';
 import type { ShopwareApps } from './app/store/shopware-apps.store';
 import type { System } from './app/store/system.store';
 import type { ModalsStore } from './app/store/modals.store';
+import type { SidebarStore } from './app/store/sidebar.store';
 import type { MenuItemStore } from './app/store/menu-item.store';
 import type { NotificationStore } from './app/store/notification.store';
 import type { TabsStore } from './app/store/tabs.store';
@@ -124,7 +129,7 @@ import type { SwProductDetailStore } from './module/sw-product/page/sw-product-d
 import type { SwProfileStore } from './module/sw-profile/store/sw-profile.store';
 import type { SwPromotionDetailStore } from './module/sw-promotion-v2/page/sw-promotion-v2-detail/store';
 import type { SwFlowStore } from './module/sw-flow/store/flow.store';
-import type { SwBulkStore } from './module/sw-bulk-edit/store/sw-bulk-edit.store';
+import type { SwBulkStore } from './app/store/sw-bulk-edit.store';
 
 // trick to make it an "external module" to support global type extension
 
@@ -179,26 +184,25 @@ declare global {
      */
     type Remove<T, K extends keyof T> = T & { [P in K]?: never };
 
+    interface CustomShopwareProperties {}
+
     /**
      * Make the Shopware object globally available
      */
-    const Shopware: ShopwareClass;
+    const Shopware: ShopwareClass & CustomShopwareProperties;
 
     type Entity<EntityName extends keyof EntitySchema.Entities> = EntitySchema.Entity<EntityName>;
     type EntityCollection<EntityName extends keyof EntitySchema.Entities> = EntitySchema.EntityCollection<EntityName>;
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-    interface CustomShopwareProperties {}
-
     interface Window {
-        Shopware: ShopwareClass;
+        Shopware: ShopwareClass & CustomShopwareProperties;
         _features_: {
             [featureName: string]: boolean;
         };
         _inAppPurchases_: Record<string, string>;
         processingInactivityLogout?: boolean;
         _sw_extension_component_collection: DevtoolComponent[];
-        // Only available with Vite
+        _swLoginOverrides?: Array<() => void>;
         startApplication: () => void;
     }
 
@@ -382,6 +386,7 @@ declare global {
         shopwareApps: ShopwareApps;
         system: System;
         modals: ModalsStore;
+        sidebar: SidebarStore;
         menuItem: MenuItemStore;
         notification: NotificationStore;
         tabs: TabsStore;
@@ -458,29 +463,13 @@ declare module 'bottlejs' {
     }
 }
 
-/**
- * @deprecated tag:v6.7.0 - will be removed when Vue compat gets removed
- */
-interface LegacyPublicProperties {
-    $set(target: object, key: string, value: any): void;
-    $delete(target: object, key: string): void;
-    $mount(el?: string | Element): this;
-    $destroy(): void;
-    $scopedSlots: Slots;
-    $on(event: string | string[], fn: Function): this;
-    $once(event: string, fn: Function): this;
-    $off(event?: string | string[], fn?: Function): this;
-    $children: LegacyPublicProperties[];
-    $listeners: Record<string, Function | Function[]>;
-    isCompatEnabled: (key: string) => boolean;
-}
-
-interface CustomProperties extends ServiceContainer, LegacyPublicProperties {
+interface CustomProperties extends ServiceContainer {
     $createTitle: (identifier?: string | null) => string;
     $router: Router;
     $store: Store<VuexRootState>;
     $route: RouteLocationNormalizedLoaded;
-    $tc: I18n<{}, {}, {}, string, true>['global']['tc'];
+    $te: I18n<{}, {}, {}, string, true>['global']['te'];
+    $tc: I18n<{}, {}, {}, string, true>['global']['t'];
     $t: I18n<{}, {}, {}, string, true>['global']['t'];
     $dataScope: () => ComponentInternalInstance['proxy'];
 }
