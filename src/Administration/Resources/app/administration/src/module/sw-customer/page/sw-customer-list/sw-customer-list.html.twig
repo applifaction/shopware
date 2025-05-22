@@ -365,6 +365,9 @@
                 <sw-empty-state
                     v-if="filterCriteria.length || isValidTerm(term)"
                     :title="$tc('sw-empty-state.messageNoResultTitle')"
+                    :subline="$tc('sw-empty-state.messageNoResultSubline')"
+                    :link-text="$tc('sw-empty-state.messageNoResultLink')"
+                    link-href="sw.profile.index.searchPreferences"
                 >
                     <template #icon>
                         <img

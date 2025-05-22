@@ -174,6 +174,9 @@
             <sw-empty-state
                 v-if="isValidTerm(term)"
                 :title="$tc('sw-empty-state.messageNoResultTitle')"
+                :subline="$tc('sw-empty-state.messageNoResultSubline')"
+                :link-text="$tc('sw-empty-state.messageNoResultLink')"
+                link-href="sw.profile.index.searchPreferences"
             >
                 <template #default>
                     {{ $tc('sw-empty-state.messageNoResultSublineBefore') }}
