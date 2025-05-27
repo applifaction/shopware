@@ -22,6 +22,7 @@ use Shopware\Core\Checkout\Cart\Order\Transformer\TransactionTransformer;
 use Shopware\Core\Checkout\Customer\CustomerCollection;
 use Shopware\Core\Checkout\Order\Aggregate\OrderAddress\OrderAddressCollection;
 use Shopware\Core\Checkout\Order\Aggregate\OrderDelivery\OrderDeliveryCollection;
+use Shopware\Core\Checkout\Order\Aggregate\OrderDelivery\OrderDeliveryEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderDelivery\OrderDeliveryStates;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStates;
 use Shopware\Core\Checkout\Order\OrderDefinition;
@@ -61,6 +62,10 @@ class OrderConverter
     final public const ORIGINAL_ORDER_NUMBER = 'originalOrderNumber';
 
     final public const ORIGINAL_DOWNLOADS = 'originalDownloads';
+
+    final public const ORIGINAL_PRIMARY_ORDER_DELIVERY = 'originalPrimaryOrderDelivery';
+
+    final public const ORIGINAL_PRIMARY_ORDER_TRANSACTION = 'originalPrimaryOrderTransaction';
 
     final public const ADMIN_EDIT_ORDER_PERMISSIONS = [
         ProductCartProcessor::ALLOW_PRODUCT_PRICE_OVERWRITES => true,
@@ -259,6 +264,23 @@ class OrderConverter
         $lineItems = LineItemTransformer::transformFlatToNested($order->getLineItems());
 
         $cart->addLineItems($lineItems);
+
+        if ($order->getPrimaryOrderTransactionId()) {
+            $cart->addExtension(self::ORIGINAL_PRIMARY_ORDER_TRANSACTION, new IdStruct($order->getPrimaryOrderTransactionId()));
+        }
+
+        if ($order->getPrimaryOrderDeliveryId()) {
+            $cart->addExtension(self::ORIGINAL_PRIMARY_ORDER_DELIVERY, new IdStruct($order->getPrimaryOrderDeliveryId()));
+
+            /*
+            * Ensure that the primary delivery is positioned first in the collection,
+            * so that any usage of `$deliveries->first()` will consistently return it.
+            */
+            $order->getDeliveries()->sort(function (OrderDeliveryEntity $delivery) use ($order) {
+                return $delivery->getId() === $order->getPrimaryOrderDeliveryId() ? -1 : 1;
+            });
+        }
+
         $cart->setDeliveries(
             $this->convertDeliveries($order->getDeliveries(), $lineItems)
         );

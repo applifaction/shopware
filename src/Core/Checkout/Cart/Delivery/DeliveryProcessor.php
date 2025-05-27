@@ -8,10 +8,13 @@ use Shopware\Core\Checkout\Cart\CartDataCollectorInterface;
 use Shopware\Core\Checkout\Cart\CartProcessorInterface;
 use Shopware\Core\Checkout\Cart\Delivery\Struct\Delivery;
 use Shopware\Core\Checkout\Cart\LineItem\CartDataCollection;
+use Shopware\Core\Checkout\Cart\Order\IdStruct;
+use Shopware\Core\Checkout\Cart\Order\OrderConverter;
 use Shopware\Core\Checkout\Cart\Price\Struct\CalculatedPrice;
 use Shopware\Core\Checkout\Shipping\ShippingMethodCollection;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Shopware\Core\Framework\Feature;
 use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Profiling\Profiler;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
@@ -93,18 +96,43 @@ class DeliveryProcessor implements CartProcessorInterface, CartDataCollectorInte
                     return $delivery->getShippingCosts()->getTotalPrice() >= 0;
                 });
 
-                $firstDelivery = $deliveries->first();
-                if ($firstDelivery === null) {
+                if (!Feature::isActive('v6.8.0.0')) {
+                    $firstDelivery = $deliveries->first();
+                    if ($firstDelivery === null) {
+                        return;
+                    }
+
+                    // Stored original edit shipping cost
+                    $manualShippingCosts = $toCalculate->getExtension(self::MANUAL_SHIPPING_COSTS) ?? $firstDelivery->getShippingCosts();
+
+                    $toCalculate->addExtension(self::MANUAL_SHIPPING_COSTS, $manualShippingCosts);
+
+                    if ($manualShippingCosts instanceof CalculatedPrice) {
+                        $firstDelivery->setShippingCosts($manualShippingCosts);
+                    }
+
+                    $this->deliveryCalculator->calculate($data, $toCalculate, $deliveries, $context);
+
+                    $toCalculate->setDeliveries($deliveries);
+
+                    return;
+                }
+
+                $primaryDelivery = $deliveries->firstWhere(function (Delivery $delivery) use ($original) {
+                    return $delivery->getExtensionOfType(OrderConverter::ORIGINAL_ID, IdStruct::class)?->getId() === $original->getExtensionOfType(OrderConverter::ORIGINAL_PRIMARY_ORDER_DELIVERY, IdStruct::class)?->getId();
+                });
+
+                if ($primaryDelivery === null) {
                     return;
                 }
 
                 // Stored original edit shipping cost
-                $manualShippingCosts = $toCalculate->getExtension(self::MANUAL_SHIPPING_COSTS) ?? $firstDelivery->getShippingCosts();
+                $manualShippingCosts = $toCalculate->getExtension(self::MANUAL_SHIPPING_COSTS) ?? $primaryDelivery->getShippingCosts();
 
                 $toCalculate->addExtension(self::MANUAL_SHIPPING_COSTS, $manualShippingCosts);
 
                 if ($manualShippingCosts instanceof CalculatedPrice) {
-                    $firstDelivery->setShippingCosts($manualShippingCosts);
+                    $primaryDelivery->setShippingCosts($manualShippingCosts);
                 }
 
                 $this->deliveryCalculator->calculate($data, $toCalculate, $deliveries, $context);
