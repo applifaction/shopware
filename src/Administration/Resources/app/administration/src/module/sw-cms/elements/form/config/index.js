@@ -33,12 +33,12 @@ export default {
                 },
                 {
                     id: 2,
-                    value: 'contact',
+                    value: 'sw-cms-el-form-template-contact',
                     label: this.$tc('sw-cms.elements.form.config.label.typeContact'),
                 },
                 {
                     id: 3,
-                    value: 'newsletter',
+                    value: 'sw-cms-el-form-template-newsletter',
                     label: this.$tc('sw-cms.elements.form.config.label.typeNewsletter'),
                 },
             ];
