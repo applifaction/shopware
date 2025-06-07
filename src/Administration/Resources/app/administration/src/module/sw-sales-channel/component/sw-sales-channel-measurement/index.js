@@ -6,7 +6,6 @@ import template from './sw-sales-channel-measurement.html.twig';
 import './sw-sales-channel-measurement.scss';
 
 const { Criteria } = Shopware.Data;
-const { cloneDeep } = Shopware.Utils.object;
 
 // eslint-disable-next-line sw-deprecation-rules/private-feature-declarations
 export default Shopware.Component.wrapComponentConfig({
@@ -46,6 +45,7 @@ export default Shopware.Component.wrapComponentConfig({
         return {
             defaultMeasurementSystem: null,
             defaultDisplayUnits: [],
+            measurementSystems: [],
         };
     },
 
@@ -77,12 +77,38 @@ export default Shopware.Component.wrapComponentConfig({
             return this.salesChannel.measurementUnits;
         },
 
-        lengthUnits() {
-            return (this.defaultMeasurementSystem?.units || []).filter((unit) => unit.type === 'length');
+        units() {
+            return (
+                this.measurementSystems.find((system) => system.technicalName === this.measurementUnits.system)?.units || []
+            );
         },
 
-        weightUnits() {
-            return (this.defaultMeasurementSystem?.units || []).filter((unit) => unit.type === 'weight');
+        measurementSystemOptions() {
+            return this.measurementSystems.map((system) => ({
+                ...system,
+                label: system.translated?.name || system.name,
+                value: system.technicalName,
+            }));
+        },
+
+        lengthUnitOptions() {
+            return this.units
+                .filter((unit) => unit.type === 'length')
+                .map((unit) => ({
+                    ...unit,
+                    label: this.formatUnitLabel(unit),
+                    value: unit.shortName,
+                }));
+        },
+
+        weightUnitOptions() {
+            return this.units
+                .filter((unit) => unit.type === 'weight')
+                .map((unit) => ({
+                    ...unit,
+                    label: this.formatUnitLabel(unit),
+                    value: unit.shortName,
+                }));
         },
 
         defaultLengthUnit() {
@@ -93,18 +119,28 @@ export default Shopware.Component.wrapComponentConfig({
             return this.defaultDisplayUnits.find((u) => u.type === 'weight');
         },
 
-        measurementUnitId: {
-            get() {
-                if (!this.defaultMeasurementSystem?.id) {
-                    return null;
-                }
+        measurementUnitSystemError() {
+            if (!this.salesChannel?.id) {
+                return null;
+            }
 
-                return this.defaultMeasurementSystem.id;
-            },
+            return Shopware.Store.get('error').getApiError(this.salesChannel, 'measurementUnits.system');
+        },
 
-            set(value) {
-                this.defaultMeasurementSystem.id = value;
-            },
+        measurementLengthUnitError() {
+            if (!this.salesChannel?.id) {
+                return null;
+            }
+
+            return Shopware.Store.get('error').getApiError(this.salesChannel, 'measurementUnits.units.length');
+        },
+
+        measurementWeightUnitError() {
+            if (!this.salesChannel?.id) {
+                return null;
+            }
+
+            return Shopware.Store.get('error').getApiError(this.salesChannel, 'measurementUnits.units.weight');
         },
     },
 
@@ -114,33 +150,35 @@ export default Shopware.Component.wrapComponentConfig({
 
     methods: {
         async createdComponent() {
-            this.defaultMeasurementSystem = await this.getDefaultMeasurementSystem();
-            this.defaultDisplayUnits = (this.defaultMeasurementSystem?.units || []).filter((u) =>
+            this.measurementSystems = await this.getDefaultMeasurementSystems();
+
+            const measurementSystem = this.measurementSystems.find(
+                (system) => system.technicalName === this.measurementUnits.system,
+            );
+
+            this.defaultDisplayUnits = (measurementSystem?.units || []).filter((u) =>
                 Object.values(this.measurementUnits.units).includes(u.shortName),
             );
         },
 
-        async onMeasurementSystemChange(_, measurementSystem) {
-            if (!measurementSystem) {
+        async onMeasurementSystemChange(technicalName) {
+            if (!technicalName) {
                 return;
             }
 
-            this.measurementUnits.system = measurementSystem.technicalName;
-            const units = measurementSystem.units;
-
-            this.defaultMeasurementSystem = measurementSystem;
+            this.measurementUnits.system = technicalName;
 
             const defaultLengthUnit =
-                units.find((unit) => unit.shortName === this.defaultLengthUnit.shortName) ||
-                units.find((unit) => unit.type === 'length' && unit.default);
+                this.units.find((unit) => unit.shortName === this.defaultLengthUnit.shortName) ||
+                this.units.find((unit) => unit.type === 'length' && unit.default);
 
             if (defaultLengthUnit) {
                 this.measurementUnits.units.length = defaultLengthUnit.shortName;
             }
 
             const defaultWeightUnit =
-                units.find((unit) => unit.shortName === this.defaultWeightUnit.shortName) ||
-                units.find((unit) => unit.type === 'weight' && unit.default);
+                this.units.find((unit) => unit.shortName === this.defaultWeightUnit.shortName) ||
+                this.units.find((unit) => unit.type === 'weight' && unit.default);
 
             if (defaultWeightUnit) {
                 this.measurementUnits.units.weight = defaultWeightUnit.shortName;
@@ -158,17 +196,8 @@ export default Shopware.Component.wrapComponentConfig({
             return `${name} (${shortName})`.trim();
         },
 
-        async getDefaultMeasurementSystem() {
-            const criteria = cloneDeep(this.measurementSystemCriteria);
-            criteria.setLimit(1);
-
-            if (this.measurementUnits.system) {
-                criteria.addFilter(Criteria.equals('technicalName', this.measurementUnits.system));
-            }
-
-            const measurement = await this.measurementSystemRepository.search(criteria);
-
-            return measurement?.first();
+        getDefaultMeasurementSystems() {
+            return this.measurementSystemRepository.search(this.measurementSystemCriteria);
         },
     },
 });
