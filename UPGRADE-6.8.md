@@ -153,6 +153,11 @@ Get the first order delivery with `primaryOrderDelivery` so you should replace m
 ## Use `primaryOrderTransaction`
 Get the latest order transaction with `primaryOrderTransaction` so you should replace methods like `transaction.last()`
 
+## Changed URL generation in MediaUrlGenerator to properly encode file paths
+* Media URLs with whitespace or other special characters in the filename will now be correctly URL-encoded (e.g. spaces replaced by `%20`).
+* This change is behind the feature flag `v6.8.0.0`.
+* Make sure to remove any redundant double URL encoding, e.g. by avoiding the twig `encodeUrl` filter on media URLs, since they are now properly encoded by default.
+
 </details>
 
 # Administration

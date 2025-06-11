@@ -16,6 +16,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
+use Shopware\Core\Framework\Feature;
 use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Request;
@@ -61,6 +62,10 @@ class MediaSerializer extends AbstractMediaSerializer implements ResetInterface
 
         if (empty($url)) {
             return $deserialized;
+        }
+
+        if (!Feature::isActive('v6.8.0.0')) {
+            $url = str_replace(' ', '%20', $url);
         }
 
         if (!filter_var($url, \FILTER_VALIDATE_URL)) {
